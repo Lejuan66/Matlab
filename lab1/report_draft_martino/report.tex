@@ -1,0 +1,154 @@
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[british]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{latexlib}
+
+\begin{document}
+
+\UppsalaTitlePage
+    {Lab 1 Report}
+    {Computer Assisted Image Analysis}
+    {Martino Pilia}
+    {28\th~October 2016}
+
+\newpage
+
+\subsubsection*{Where in the image is the pixel (1, 1) located and what is the
+graylevel value? In command window type I(1,1). Did you get the same value?}
+
+Pixel (1,1) is located on top left of the image and it has grayvalue of 89. We
+get the same value with I(1,1).
+
+\subsubsection*{Explain what contrast and brightness are. What change in the
+    histogram is related to the contrast and what change is related to the
+    brightness? Illustrate this by drawing graphs showing how the graylevel
+    transform changes as the contrast and brightness are varied.}
+Contrast of an object is the difference in luminous intensity (luminance) that
+makes it distinguishable from the background. A contrast transformation is in
+the form
+\begin{align*}
+    f'\rbra{x,y} = c \cdot f\rbra{x,y}
+\end{align*}
+where $f$ is the intensity of the original image, $f'$ is the intensity
+of the transformed image, and $c$ is a constant value. If $c>1$ then the
+transformation increases the contrast, because it maps intervals of intensity
+into broader intervals, while if $c<1$ then the transformation decreases the
+contrast, because it maps into smaller intervals.
+The effect of a contrast transformation is to stretch or compress the histogram
+horizontally.
+
+In very simple terms, brightness is a measure of the luminous intensity of
+light emitted or reflected by a source. A brightness transformation is in 
+the form of a translation
+\begin{align*}
+    f'\rbra{x,y} = c + f\rbra{x,y}
+\end{align*}
+If $c > 0$ then the brightness is increased, while if $c < 0$ then the
+brightness is decreased.
+The effect of a brightness transformation is to translate the histogram (to the
+left if $c < 0$, to the right if $c > 0$). Overflowing values accumulates on
+the value of $0$ or $255$ (according to the sign of $c$).
+
+\subsubsection*{Explain the difference of {\tt imagesc((I/64)*64)} and
+    {\tt imagesc((Is/64)*64)}, where I is uint8 and Is is single.}
+
+{\tt imagesc((I/64)*64)} performs an integer division, losing information due
+to rounding, so when multiplying back we do not obtain the original values,
+while {\tt imagesc((Is/64)*64)} operates a real division, so when we multiply
+we get (almost) the original values (except for machine representation errors).
+
+\subsubsection*{Demonstrate an expression involving I to make it brighter.}
+
+{\tt I\_brighter = I + 150;}
+
+\subsubsection*{Demonstrate an expression involving I to give it lower
+contrast.}
+
+{\tt I\_lower\_contrast = I * 0.2;}
+
+\subsubsection*{Use $g = 2$ and $g = \frac{1}{2}$ and explain the 
+    resulting images.}
+
+We have two different gamma transformations of the image, one with $\gamma > 1$,
+so the resulting image is darker, and one with $\gamma < 1$, so the resulting
+image is lighter.
+
+
+\subsubsection*{Explain how histogram equalization works in theory. Compare the histograms of the original images and the output images. Do the changes to 
+    the histograms and the images agree with the theory of histogram 
+    equalization?}
+
+Histogram equalization works linearising the cumulative distribution, using the
+cumulative histogram curve as a transformation, flattening the histogram and
+redistributing the intensity values in a more even fashion. This allows to make
+details more visible in regions of the original image where they where
+described with close intensity values.  
+
+For the higher brightness image, the histogram shows how we cut out the values
+lower than the constant we added (150). For the lower contrast image, the
+histogram shows how we concentrated all the values in an interval of dark
+intensity (whose amplitude is 0.2 times the amplitude of the original interval).
+
+
+\subsubsection*{Explain the role of the interpolation method as well as the role 
+    of the lowpass-filter. Which combination of options do you prefer? And
+    why?}
+
+The interpolation determines how the intensity of the pixel in the resized
+image is computed from the original image. {\em Nearest} takes the color of the
+nearest pixel, while {\em bilinear} performs bilinear interpolation with the four
+nearest pixels (row and column neighbours). The antialiasing cuts the high
+frequencies, which can generate artifact patterns in the resulting image if
+not removed, giving a smoother result.
+
+\subsubsection*{Can you give a real-life example of aliasing outside the area of 
+    image analysis and signal processing in general? Have you seen this
+    phenomenon before?}
+
+An example of temporal aliasing is the optical illusion given by a wheel or an
+aircraft propeller, that for some speeds seem to the human eye to slowly
+rotate in the opposite direction of the real motion. This is because of the
+aliasing due to the difference between the frequency of rotation and the
+frequency of sampling (which is the inverse of the persistence time
+of the image on the human retina).
+
+
+\subsubsection*{How can a “standard” healthy brain, or a mean image, of the two
+    images brain1.png and brain2.png be constructed?}
+
+(uint32(brain1) + uint32(brain2)) / 2;
+
+\subsubsection*{Find the difference between the “standard” brain and the image
+    from the stroke patient (brain3.png). Where in the brain is the change
+    located?}
+
+uint8(uint32(brain3) - ((uint32(brain1) + uint32(brain2)) / 2));
+
+\subsubsection*{What happens when a pixel gets a value less than 0 or a value
+    greater than 255? Are there other ways this can be handled?}
+
+When a pixel goes below 0 or beyond 255 an overflow occurs, and the resulting
+image has a loss of information. We can use a different datatype to
+handle the problem, allowing bigger or smaller values to be kept in memory:
+this is especially useful in intermediate computation steps, for example when
+computing the average of two images.
+
+\subsubsection*{Compare rotations performed with and without interpolation. 
+    It is easiest to see differences along lines and edges of the images. 
+    What does interpolation mean in this case?}
+
+Interpolation determines how pixels of the new image are sampled from the
+values obtained by pure geometrical transformation. Because we are rotating a
+grid of pixels, the grid of the new image does not map directly into the grid
+of the original image, pixel by pixel, so a sampling is needed to determine
+the values for the pixels of the new image, and the result is different
+according to the sampling algorithm used. Interpolation allows to obtain
+smoother images, because it uses the information of the neighbourhood of each
+pixel in order to determine its value.
+
+A rotation by multiples of 90 degrees is just a matrix transposition, so it is
+easier because it does not involve any actual computation (only copy operations).
+
+\end{document}
